@@ -15,18 +15,22 @@ const app: Application = express();
 app.use(helmet());
 const allowedOrigins = ENV.CORS_ORIGIN.split(',');
 
-app.options('*', cors({
-  origin: (origin, callback) => {
+const corsOptions = {
+  origin: (origin: string | undefined, callback: any) => {
+    console.log('CORS Check:', origin);
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     } else {
-      return callback(new Error('Not allowed by CORS...'));
+      return callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
-}));
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // Parsers
 app.use(express.json());
