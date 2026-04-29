@@ -17,17 +17,17 @@ const allowedOrigins = ENV.CORS_ORIGIN.split(',');
 
 app.use(cors({
   origin: (origin, callback) => {
-    // allow requests with no origin (like Postman, mobile apps)
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     } else {
-      return callback(new Error('CORS not allowed'));
+      return callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
 }));
+
 // Parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
