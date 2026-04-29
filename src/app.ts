@@ -15,8 +15,6 @@ const app: Application = express();
 app.use(helmet());
 const allowedOrigins = ENV.CORS_ORIGIN.split(',');
 
-const allowedOrigins = ENV.CORS_ORIGIN.split(',');
-
 app.use(cors({
   origin: (origin, callback) => {
     // allow requests with no origin (like Postman, mobile apps)
