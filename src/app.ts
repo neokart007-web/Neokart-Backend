@@ -13,33 +13,22 @@ const app: Application = express();
 
 // Security Middlewares
 app.use(helmet());
-// const allowedOrigins = ENV.CORS_ORIGIN.split(',');
-
-// const corsOptions = {
-//   origin: (origin: string | undefined, callback: any) => {
-//     console.log('CORS Check:', origin);
-//     if (!origin) return callback(null, true);
-
-//     if (allowedOrigins.includes(origin)) {
-//       return callback(null, true);
-//     } else {
-//       console.log('Warning: Origin not in allowed list, but allowing for dev:', origin);
-//       return callback(null, true); // Temporarily allow all to prevent fetch errors
-//     }
-//   },
-//   credentials: true,
-// };
-
-// app.use(cors(corsOptions));
-// app.options('*', cors(corsOptions));
+const allowedOrigins = process.env.CORS_ORIGIN?.split(",") || [];
 
 const corsConfig = {
-  origin: "*",
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
-}
-app.use(cors(corsConfig));
+  origin: function (origin: string | undefined, callback: any) {
+    if (!origin) return callback(null, true);
 
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+};
+
+app.use(cors(corsConfig));
 // Parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
