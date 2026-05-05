@@ -3,6 +3,7 @@ import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import Order from '../models/Order';
 import { Product } from '../models/Product';
+import { sendEmail } from '../utils/sendEmail';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -15,7 +16,7 @@ const razorpayInstance = new Razorpay({
 export const createOrder = async (req: Request, res: Response) => {
   try {
     const { total } = req.body;
-    
+
     let razorpayOrder;
     let isMock = false;
 
@@ -123,6 +124,47 @@ export const verifyPayment = async (req: Request, res: Response) => {
         await product.save();
       }
 
+      // Send Order Confirmation Email
+      try {
+        if (req.user && req.user.email) {
+          const htmlMessage = `
+            <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 10px; overflow: hidden; background-color: #ffffff;">
+              <div style="background-color: #111827; padding: 30px; text-align: center;">
+                <h1 style="color: #ffffff; margin: 0; font-size: 24px; letter-spacing: 2px; text-transform: uppercase;">Heedy</h1>
+              </div>
+              <div style="padding: 40px 30px;">
+                <h2 style="color: #111827; font-size: 20px; margin-top: 0; margin-bottom: 20px;">Order Confirmation</h2>
+                <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+                  Dear <strong>${req.user.name}</strong>,<br><br>
+                  Thank you for your purchase! Your order has been placed successfully and is now being processed.
+                </p>
+                <div style="background-color: #f9fafb; border: 1px solid #f3f4f6; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+                  <p style="margin: 0 0 10px 0; color: #374151; font-size: 15px;"><strong>Order ID:</strong> <span style="color: #111827;">${newOrder._id}</span></p>
+                  <p style="margin: 0 0 10px 0; color: #374151; font-size: 15px;"><strong>Order Date:</strong> <span style="color: #111827;">${String(newOrder.createdAt?.getDate() || new Date().getDate()).padStart(2, '0')}/${String((newOrder.createdAt?.getMonth() || new Date().getMonth()) + 1).padStart(2, '0')}/${newOrder.createdAt?.getFullYear() || new Date().getFullYear()}</span></p>
+                  <p style="margin: 0; color: #374151; font-size: 15px;"><strong>Total Amount:</strong> <span style="color: #111827; font-size: 18px; font-weight: bold;">₹${newOrder.total}</span></p>
+                </div>
+                <p style="color: #4b5563; font-size: 15px; line-height: 1.6; margin-bottom: 30px;">
+                  We will send you another email once your order has been shipped. If you have any questions, feel free to reply to this email.
+                </p>
+                <div style="text-align: center;">
+                  <a href="${process.env.FRONTEND_URL || 'https://heedy-frontend.vercel.app'}/profile" style="background-color: #111827; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; font-size: 14px; display: inline-block;">View Order Details</a>
+                </div>
+              </div>
+              <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #eaeaea;">
+                <p style="color: #9ca3af; font-size: 13px; margin: 0;">© ${new Date().getFullYear()} Heedy Luxury. All rights reserved.</p>
+              </div>
+            </div>
+          `;
+          await sendEmail({
+            email: req.user.email,
+            subject: 'Order Confirmation - Heedy',
+            html: htmlMessage
+          });
+        }
+      } catch (emailErr) {
+        console.error('Error sending confirmation email:', emailErr);
+      }
+
       res.status(200).json({
         success: true,
         message: "Payment verified and order placed successfully",
@@ -143,7 +185,7 @@ export const getMyOrders = async (req: Request, res: Response) => {
     const orders = await Order.find({ user: req.user?._id })
       .populate('items.product', 'name images')
       .sort({ createdAt: -1 });
-    
+
     res.status(200).json({ success: true, data: orders });
   } catch (error: any) {
     console.error('Error fetching orders:', error);
@@ -158,7 +200,7 @@ export const getAllOrders = async (req: Request, res: Response) => {
       .populate('user', 'name email phone')
       .populate('items.product', 'name images variants')
       .sort({ createdAt: -1 });
-    
+
     res.status(200).json({ success: true, data: orders });
   } catch (error: any) {
     console.error('Error fetching all orders:', error);
@@ -177,10 +219,60 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       { orderStatus },
       { new: true }
     ).populate('user', 'name email phone')
-     .populate('items.product', 'name images variants');
+      .populate('items.product', 'name images variants');
 
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Send Status Update Email
+    try {
+      const user = order.user as any;
+      if (user && user.email) {
+        let statusColor = '#3b82f6'; // default blue
+        if (orderStatus === 'delivered') statusColor = '#10b981'; // green
+        if (orderStatus === 'cancelled') statusColor = '#ef4444'; // red
+        if (orderStatus === 'processing') statusColor = '#f59e0b'; // orange
+
+        const htmlMessage = `
+            <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 10px; overflow: hidden; background-color: #ffffff;">
+              <div style="background-color: #111827; padding: 30px; text-align: center;">
+                <h1 style="color: #ffffff; margin: 0; font-size: 24px; letter-spacing: 2px; text-transform: uppercase;">Heedy</h1>
+              </div>
+              <div style="padding: 40px 30px;">
+                <h2 style="color: #111827; font-size: 20px; margin-top: 0; margin-bottom: 20px;">Order Status Update</h2>
+                <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+                  Dear <strong>${user.name}</strong>,<br><br>
+                  There is an update regarding your recent order.
+                </p>
+                <div style="background-color: #f9fafb; border: 1px solid #f3f4f6; border-radius: 8px; padding: 20px; margin-bottom: 30px; text-align: center;">
+                  <p style="margin: 0 0 10px 0; color: #374151; font-size: 15px;"><strong>Order ID:</strong> <span style="color: #111827;">${order._id}</span></p>
+                  <p style="margin: 0 0 10px 0; color: #374151; font-size: 15px;"><strong>Order Date:</strong> <span style="color: #111827;">${String(new Date(order.createdAt).getDate()).padStart(2, '0')}/${String(new Date(order.createdAt).getMonth() + 1).padStart(2, '0')}/${new Date(order.createdAt).getFullYear()}</span></p>
+                  <p style="margin: 0; color: #374151; font-size: 15px;">Current Status:</p>
+                  <div style="display: inline-block; background-color: ${statusColor}15; color: ${statusColor}; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 16px; text-transform: uppercase; margin-top: 10px; border: 1px solid ${statusColor}40;">
+                    ${orderStatus}
+                  </div>
+                </div>
+                <p style="color: #4b5563; font-size: 15px; line-height: 1.6; margin-bottom: 30px;">
+                  Thank you for shopping with Heedy. If you have any questions, feel free to reply to this email.
+                </p>
+                <div style="text-align: center;">
+                  <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/profile" style="background-color: #111827; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; font-size: 14px; display: inline-block;">View Order History</a>
+                </div>
+              </div>
+              <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #eaeaea;">
+                <p style="color: #9ca3af; font-size: 13px; margin: 0;">© ${new Date().getFullYear()} Heedy Luxury. All rights reserved.</p>
+              </div>
+            </div>
+        `;
+        await sendEmail({
+          email: user.email,
+          subject: `Order ${orderStatus.charAt(0).toUpperCase() + orderStatus.slice(1)} - Heedy`,
+          html: htmlMessage
+        });
+      }
+    } catch (emailErr) {
+      console.error('Error sending status update email:', emailErr);
     }
 
     res.status(200).json({ success: true, data: order });
