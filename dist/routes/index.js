@@ -15,6 +15,7 @@ const userRoutes_1 = __importDefault(require("./userRoutes"));
 const paymentRoutes_1 = __importDefault(require("./paymentRoutes"));
 const cartRoutes_1 = __importDefault(require("./cartRoutes"));
 const dashboardRoutes_1 = __importDefault(require("./dashboardRoutes"));
+const contactRoutes_1 = __importDefault(require("./contactRoutes"));
 const router = (0, express_1.Router)();
 // Health Check
 router.get('/health', healthController_1.checkHealth);
@@ -29,5 +30,6 @@ router.use('/users', userRoutes_1.default);
 router.use('/payments', paymentRoutes_1.default);
 router.use('/cart', cartRoutes_1.default);
 router.use('/dashboard', dashboardRoutes_1.default);
+router.use('/contacts', contactRoutes_1.default);
 exports.default = router;
 //# sourceMappingURL=index.js.map

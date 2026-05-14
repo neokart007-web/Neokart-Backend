@@ -108,7 +108,7 @@ exports.registerCustomer = (0, asyncHandler_1.asyncHandler)(async (req, res) => 
     const message = `Your email verification code is: ${otp}\n\nIt expires in 10 minutes.`;
     await (0, sendEmail_1.sendEmail)({
         email: user.email,
-        subject: 'Heedy Luxury - Verify your email',
+        subject: 'Heedy - Verify your email',
         message
     });
     (0, responseHandler_1.successResponse)(res, 201, 'OTP sent to your email. Please verify to complete registration.', {
