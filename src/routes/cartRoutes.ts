@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getCart, addToCart, updateCartItem, removeFromCart, clearCart } from '../controllers/cartController';
+import { getCart, addToCart, updateCartItem, removeFromCart, clearCart, mergeCart } from '../controllers/cartController';
 import { protect } from '../middlewares/authMiddleware';
 
 const router = Router();
@@ -11,6 +11,9 @@ router.route('/')
   .get(getCart)
   .post(addToCart)
   .delete(clearCart); // Delete whole cart or clear items
+
+// Merge a guest cart into the user's cart after login
+router.post('/merge', mergeCart);
 
 router.route('/item')
   .put(updateCartItem)

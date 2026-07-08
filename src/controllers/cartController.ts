@@ -89,6 +89,44 @@ export const removeFromCart = asyncHandler(async (req: Request, res: Response) =
   return successResponse(res, 200, 'Item removed from cart', cart);
 });
 
+// Merge a guest cart into the authenticated user's cart.
+// Adds incoming quantities to matching lines (same product + size) and pushes new ones.
+export const mergeCart = asyncHandler(async (req: Request, res: Response) => {
+  const { items } = req.body as {
+    items?: { productId: string; quantity: number; size?: string }[];
+  };
+
+  let cart = await Cart.findOne({ user: req.user?._id });
+  if (!cart) {
+    cart = await Cart.create({ user: req.user?._id, items: [] });
+  }
+
+  if (Array.isArray(items)) {
+    for (const incoming of items) {
+      const quantity = Number(incoming?.quantity);
+      if (!incoming?.productId || !quantity || quantity < 1) continue;
+
+      // Skip items whose product no longer exists.
+      const product = await Product.findById(incoming.productId);
+      if (!product) continue;
+
+      const existingItemIndex = cart.items.findIndex(
+        (item) => item.product.toString() === incoming.productId && item.size === incoming.size
+      );
+
+      if (existingItemIndex > -1) {
+        cart.items[existingItemIndex].quantity += quantity;
+      } else {
+        cart.items.push({ product: incoming.productId as any, quantity, size: incoming.size });
+      }
+    }
+    await cart.save();
+  }
+
+  await cart.populate('items.product');
+  return successResponse(res, 200, 'Cart merged successfully', cart);
+});
+
 // Clear Cart
 export const clearCart = asyncHandler(async (req: Request, res: Response) => {
   let cart = await Cart.findOne({ user: req.user?._id });
