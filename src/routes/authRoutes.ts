@@ -1,13 +1,11 @@
 import { Router } from 'express';
-import { loginAdmin, createTestAdmin, registerCustomer, loginCustomer, verifyOtp, resendOtp, googleAuth } from '../controllers/authController';
+import { loginAdmin, createTestAdmin, googleAuth } from '../controllers/authController';
 
 const router = Router();
 
+// Admin portal login (email + password)
 router.post('/login', loginAdmin);
-router.post('/customer-login', loginCustomer);
-router.post('/register', registerCustomer);
-router.post('/verify-otp', verifyOtp);
-router.post('/resend-otp', resendOtp);
+// Customer authentication is Google-only
 router.post('/google', googleAuth);
 router.post('/setup-test-admin', createTestAdmin); // Can be called once to generate an admin
 
