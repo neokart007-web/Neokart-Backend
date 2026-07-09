@@ -69,7 +69,9 @@ exports.createTestAdmin = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
 });
 // Google OAuth Sign-In (supports both ID token and access token flows)
 exports.googleAuth = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
-    const { credential, googleId: bodyGoogleId, email: bodyEmail, name: bodyName, picture: bodyPicture } = req.body;
+    const { credential, googleId: bodyGoogleId, email: bodyEmail, name: bodyName, picture: bodyPicture, mode } = req.body;
+    // Which screen the request came from: 'register' (sign up) or 'signin' (sign in).
+    const authMode = mode === 'register' ? 'register' : mode === 'signin' ? 'signin' : undefined;
     let email;
     let name;
     let picture;
@@ -121,6 +123,14 @@ exports.googleAuth = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
         // Check if this email already belongs to a customer/account (case-insensitive).
         let user = await User_1.User.findOne({ email: normalizedEmail }).collation({ locale: 'en', strength: 2 });
         const isNewUser = !user;
+        // Signing in requires an existing account.
+        if (authMode === 'signin' && !user) {
+            return (0, responseHandler_1.errorResponse)(res, 404, 'You are not signed up. Please create an account first.');
+        }
+        // Signing up requires the account to not already exist.
+        if (authMode === 'register' && user) {
+            return (0, responseHandler_1.errorResponse)(res, 409, 'You are already signed up. Please sign in instead.');
+        }
         if (user) {
             // Email already exists — reuse the existing account instead of creating a duplicate.
             if (!user.isActive) {
