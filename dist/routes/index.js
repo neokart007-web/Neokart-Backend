@@ -10,12 +10,10 @@ const productRoutes_1 = __importDefault(require("./productRoutes"));
 const categoryRoutes_1 = __importDefault(require("./categoryRoutes"));
 const bannerRoutes_1 = __importDefault(require("./bannerRoutes"));
 const couponRoutes_1 = __importDefault(require("./couponRoutes"));
-const testimonialRoutes_1 = __importDefault(require("./testimonialRoutes"));
 const userRoutes_1 = __importDefault(require("./userRoutes"));
 const paymentRoutes_1 = __importDefault(require("./paymentRoutes"));
 const cartRoutes_1 = __importDefault(require("./cartRoutes"));
 const dashboardRoutes_1 = __importDefault(require("./dashboardRoutes"));
-const contactRoutes_1 = __importDefault(require("./contactRoutes"));
 const faqRoutes_1 = __importDefault(require("./faqRoutes"));
 const router = (0, express_1.Router)();
 // Health Check
@@ -26,12 +24,10 @@ router.use('/products', productRoutes_1.default);
 router.use('/categories', categoryRoutes_1.default);
 router.use('/banners', bannerRoutes_1.default);
 router.use('/coupons', couponRoutes_1.default);
-router.use('/testimonials', testimonialRoutes_1.default);
 router.use('/users', userRoutes_1.default);
 router.use('/payments', paymentRoutes_1.default);
 router.use('/cart', cartRoutes_1.default);
 router.use('/dashboard', dashboardRoutes_1.default);
-router.use('/contacts', contactRoutes_1.default);
 router.use('/faqs', faqRoutes_1.default);
 exports.default = router;
 //# sourceMappingURL=index.js.map

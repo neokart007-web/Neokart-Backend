@@ -12,6 +12,7 @@ router.post('/verify', authMiddleware_1.protect, paymentController_1.verifyPayme
 router.get('/myorders', authMiddleware_1.protect, paymentController_1.getMyOrders);
 // Admin routes
 router.get('/admin/orders', authMiddleware_1.protect, (0, authMiddleware_1.authorize)('admin', 'superadmin'), paymentController_1.getAllOrders);
+router.get('/admin/customers/:id/orders', authMiddleware_1.protect, (0, authMiddleware_1.authorize)('admin', 'superadmin'), paymentController_1.getCustomerOrders);
 router.put('/admin/orders/:id/status', authMiddleware_1.protect, (0, authMiddleware_1.authorize)('admin', 'superadmin'), paymentController_1.updateOrderStatus);
 exports.default = router;
 //# sourceMappingURL=paymentRoutes.js.map

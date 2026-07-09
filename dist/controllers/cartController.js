@@ -5,11 +5,48 @@ const Cart_1 = require("../models/Cart");
 const Product_1 = require("../models/Product");
 const asyncHandler_1 = require("../utils/asyncHandler");
 const responseHandler_1 = require("../utils/responseHandler");
+// A cart line's "size" identifies the chosen variant. When the frontend doesn't send one
+// (e.g. adding from a product card that has no size picker), fall back to the product's
+// first/default variant volume so the same product always keys to the same line and merges.
+const resolveSize = (product, size) => {
+    if (size && size.length)
+        return size;
+    return product?.variants?.[0]?.volume;
+};
 // Get Cart
 exports.getCart = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
     let cart = await Cart_1.Cart.findOne({ user: req.user?._id }).populate('items.product');
     if (!cart) {
         cart = await Cart_1.Cart.create({ user: req.user?._id, items: [] });
+        return (0, responseHandler_1.successResponse)(res, 200, 'Cart fetched successfully', cart);
+    }
+    // Consolidate any lines that point to the same product + resolved size. This heals carts
+    // that were split before size normalization existed (same item shown as two rows).
+    const merged = new Map();
+    let changed = false;
+    for (const item of cart.items) {
+        const product = item.product;
+        if (!product) {
+            changed = true;
+            continue;
+        } // drop lines whose product was deleted
+        const size = resolveSize(product, item.size);
+        const key = `${product._id.toString()}__${size ?? ''}`;
+        const existing = merged.get(key);
+        if (existing) {
+            existing.quantity += item.quantity;
+            changed = true;
+        }
+        else {
+            merged.set(key, { product: product._id, quantity: item.quantity, size });
+            if (size !== item.size)
+                changed = true; // stored size differed from the resolved one
+        }
+    }
+    if (changed) {
+        cart.items = Array.from(merged.values());
+        await cart.save();
+        await cart.populate('items.product');
     }
     return (0, responseHandler_1.successResponse)(res, 200, 'Cart fetched successfully', cart);
 });
@@ -24,12 +61,13 @@ exports.addToCart = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
     if (!cart) {
         cart = await Cart_1.Cart.create({ user: req.user?._id, items: [] });
     }
-    const existingItemIndex = cart.items.findIndex((item) => item.product.toString() === productId && item.size === size);
+    const resolvedSize = resolveSize(product, size);
+    const existingItemIndex = cart.items.findIndex((item) => item.product.toString() === productId && item.size === resolvedSize);
     if (existingItemIndex > -1) {
         cart.items[existingItemIndex].quantity += quantity;
     }
     else {
-        cart.items.push({ product: productId, quantity, size });
+        cart.items.push({ product: productId, quantity, size: resolvedSize });
     }
     await cart.save();
     await cart.populate('items.product');
@@ -87,12 +125,13 @@ exports.mergeCart = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const product = await Product_1.Product.findById(incoming.productId);
             if (!product)
                 continue;
-            const existingItemIndex = cart.items.findIndex((item) => item.product.toString() === incoming.productId && item.size === incoming.size);
+            const resolvedSize = resolveSize(product, incoming.size);
+            const existingItemIndex = cart.items.findIndex((item) => item.product.toString() === incoming.productId && item.size === resolvedSize);
             if (existingItemIndex > -1) {
                 cart.items[existingItemIndex].quantity += quantity;
             }
             else {
-                cart.items.push({ product: incoming.productId, quantity, size: incoming.size });
+                cart.items.push({ product: incoming.productId, quantity, size: resolvedSize });
             }
         }
         await cart.save();

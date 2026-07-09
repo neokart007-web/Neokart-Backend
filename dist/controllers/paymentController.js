@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateOrderStatus = exports.getAllOrders = exports.getMyOrders = exports.verifyPayment = exports.createOrder = void 0;
+exports.updateOrderStatus = exports.getAllOrders = exports.getCustomerOrders = exports.getMyOrders = exports.verifyPayment = exports.createOrder = void 0;
 const razorpay_1 = __importDefault(require("razorpay"));
 const crypto_1 = __importDefault(require("crypto"));
 const Order_1 = __importDefault(require("../models/Order"));
@@ -223,6 +223,21 @@ const getMyOrders = async (req, res) => {
     }
 };
 exports.getMyOrders = getMyOrders;
+// Admin: Get a specific customer's order history
+const getCustomerOrders = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const orders = await Order_1.default.find({ user: id })
+            .populate('items.product', 'name images')
+            .sort({ createdAt: -1 });
+        res.status(200).json({ success: true, data: orders });
+    }
+    catch (error) {
+        console.error('Error fetching customer orders:', error);
+        res.status(500).json({ success: false, message: error.message || 'Error fetching customer orders' });
+    }
+};
+exports.getCustomerOrders = getCustomerOrders;
 // Admin: Get All Orders
 const getAllOrders = async (req, res) => {
     try {

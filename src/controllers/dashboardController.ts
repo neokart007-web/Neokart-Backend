@@ -5,7 +5,6 @@ import { User } from '../models/User';
 import { Category } from '../models/Category';
 import { Banner } from '../models/Banner';
 import { Coupon } from '../models/Coupon';
-import { Testimonial } from '../models/Testimonial';
 import { asyncHandler } from '../utils/asyncHandler';
 import { successResponse } from '../utils/responseHandler';
 
@@ -18,7 +17,6 @@ export const getDashboardStats = asyncHandler(async (req: Request, res: Response
     totalCategories,
     totalBanners,
     totalCoupons,
-    totalTestimonials,
     revenueResult,
   ] = await Promise.all([
     Order.countDocuments(),
@@ -28,7 +26,6 @@ export const getDashboardStats = asyncHandler(async (req: Request, res: Response
     Category.countDocuments(),
     Banner.countDocuments(),
     Coupon.countDocuments(),
-    Testimonial.countDocuments(),
     Order.aggregate([
       { $match: { paymentStatus: 'completed' } },
       { $group: { _id: null, total: { $sum: '$total' } } }
@@ -44,7 +41,6 @@ export const getDashboardStats = asyncHandler(async (req: Request, res: Response
     totalCategories,
     totalBanners,
     totalCoupons,
-    totalTestimonials,
     totalCustomers,
     recentOrders,
   });

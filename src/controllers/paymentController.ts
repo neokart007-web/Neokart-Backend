@@ -249,6 +249,21 @@ export const getMyOrders = async (req: Request, res: Response) => {
   }
 };
 
+// Admin: Get a specific customer's order history
+export const getCustomerOrders = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const orders = await Order.find({ user: id })
+      .populate('items.product', 'name images')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, data: orders });
+  } catch (error: any) {
+    console.error('Error fetching customer orders:', error);
+    res.status(500).json({ success: false, message: error.message || 'Error fetching customer orders' });
+  }
+};
+
 // Admin: Get All Orders
 export const getAllOrders = async (req: Request, res: Response) => {
   try {
