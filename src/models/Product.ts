@@ -4,6 +4,13 @@ interface IVariant {
   volume: string;
   price: number;
   oldPrice?: number;
+  color?: string;
+  images: string[];
+}
+
+interface IVariance {
+  name: string;
+  values: string[];
 }
 
 export interface IProduct extends Document {
@@ -11,6 +18,7 @@ export interface IProduct extends Document {
   category: string;
   description: string;
   variants: IVariant[];
+  variances: IVariance[];
   starRating: number;
   reviewsCount: number;
   offerText?: string;
@@ -24,6 +32,13 @@ const variantSchema = new Schema<IVariant>({
   volume: { type: String, required: true },
   price: { type: Number, required: true },
   oldPrice: { type: Number },
+  color: { type: String },
+  images: [{ type: String }],
+});
+
+const varianceSchema = new Schema<IVariance>({
+  name: { type: String, required: true },
+  values: [{ type: String }],
 });
 
 const productSchema = new Schema<IProduct>(
@@ -32,6 +47,7 @@ const productSchema = new Schema<IProduct>(
     category: { type: String, required: true },
     description: { type: String, required: true },
     variants: [variantSchema],
+    variances: [varianceSchema],
     starRating: { type: Number, default: 0, min: 0, max: 5 },
     reviewsCount: { type: Number, default: 0 },
     offerText: { type: String },

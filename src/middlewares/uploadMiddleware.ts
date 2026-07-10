@@ -15,7 +15,7 @@ const storage = new CloudinaryStorage({
     return {
       folder: 'heedy_products',
       allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
-      public_id: file.fieldname + '-' + Date.now(),
+      public_id: `${file.fieldname}-${Date.now()}-${Math.round(Math.random() * 1e9)}`,
     };
   },
 });
