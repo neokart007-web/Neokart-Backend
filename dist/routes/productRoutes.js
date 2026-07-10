@@ -8,11 +8,12 @@ const productController_1 = require("../controllers/productController");
 const authMiddleware_1 = require("../middlewares/authMiddleware");
 const uploadMiddleware_1 = require("../middlewares/uploadMiddleware");
 const router = express_1.default.Router();
+// upload.any() accepts the product's `imageFiles` plus per-variant `variantImages_<index>` fields
 router.route('/')
-    .post(authMiddleware_1.protect, uploadMiddleware_1.upload.array('imageFiles', 5), productController_1.createProduct)
+    .post(authMiddleware_1.protect, uploadMiddleware_1.upload.any(), productController_1.createProduct)
     .get(productController_1.getProducts);
 router.route('/:id')
-    .put(authMiddleware_1.protect, uploadMiddleware_1.upload.array('imageFiles', 5), productController_1.updateProduct)
+    .put(authMiddleware_1.protect, uploadMiddleware_1.upload.any(), productController_1.updateProduct)
     .delete(authMiddleware_1.protect, productController_1.deleteProduct);
 exports.default = router;
 //# sourceMappingURL=productRoutes.js.map

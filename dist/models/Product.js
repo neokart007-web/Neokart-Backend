@@ -39,6 +39,8 @@ const variantSchema = new mongoose_1.Schema({
     volume: { type: String, required: true },
     price: { type: Number, required: true },
     oldPrice: { type: Number },
+    color: { type: String },
+    images: [{ type: String }],
 });
 const productSchema = new mongoose_1.Schema({
     name: { type: String, required: true, trim: true },
