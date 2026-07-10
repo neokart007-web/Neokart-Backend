@@ -16,15 +16,6 @@ const attachUploads = (req: Request) => {
     }
   }
 
-  // Handle variances (general options like Color, Size) parsing from FormData
-  if (typeof req.body.variances === 'string') {
-    try {
-      req.body.variances = JSON.parse(req.body.variances);
-    } catch (e) {
-      // do nothing, let validator catch it
-    }
-  }
-
   // Product-level images: existing URLs from body + newly uploaded imageFiles
   const productFileUrls = files.filter(f => f.fieldname === 'imageFiles').map(f => f.path);
   if (typeof req.body.images === 'string') {
